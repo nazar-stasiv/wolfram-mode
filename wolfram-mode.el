@@ -7,8 +7,9 @@
 ;; Modified by: Taichi Kawabata <kawabata.taichi_at_gmail.com>
 ;; Modified by: Tomas Skrivan <skrivantomas_at_seznam.cz.cz>
 ;; Modified by: Ken Kang <kenkangxgwe_at_gmail.com>
+;; Modified by: Daniel Nicolai <dalanicolai@gmail.com>
 ;; Created: 2009-07-08
-;; Modified: 2017-02-16
+;; Modified: 2022-06-09
 ;; Keywords: languages, processes, tools
 ;; Namespace: wolfram-
 ;; URL: https://github.com/kawabata/wolfram-mode/
@@ -38,7 +39,8 @@
 ;;  (autoload 'wolfram-mode "wolfram-mode" nil t)
 ;;  (autoload 'run-wolfram "wolfram-mode" nil t)
 ;;  (setq wolfram-program "/Applications/Mathematica.app/Contents/MacOS/MathKernel")
-;;  (add-to-list 'auto-mode-alist '("\\.m$" . wolfram-mode))
+;; (add-to-list 'auto-mode-alist '("\\.m$" . wolfram-mode))
+;; (add-to-list 'auto-mode-alist '("\\.wls$" . wolfram-mode))
 ;;  (setq wolfram-path "directory-in-Mathematica-$Path") ;; e.g. on Linux ~/.Mathematica/Applications
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -98,7 +100,7 @@ See `run-hooks'."
   :type 'hook
   :group 'wolfram-mode)
 
-(defcustom wolfram-program "math"
+(defcustom wolfram-program "wolframscript"
   "Command to invoke at `run-wolfram'."
   :type 'string
   :group 'wolfram-mode)
@@ -142,13 +144,13 @@ See `run-hooks'."
     (modify-syntax-entry ?\^m " " syntax-table)
 
     ;; comments and parens
-    (modify-syntax-entry ?( "()1n" syntax-table)
-    (modify-syntax-entry ?) ")(4n" syntax-table)
+    (modify-syntax-entry ?\( "()1n" syntax-table)
+    (modify-syntax-entry ?\) ")(4n" syntax-table)
     (modify-syntax-entry ?* "_ 23n" syntax-table)
 
     ;; pure parens
-    (modify-syntax-entry ?[ "(]" syntax-table)
-    (modify-syntax-entry ?] ")[" syntax-table)
+    (modify-syntax-entry ?\[ "(]" syntax-table)
+    (modify-syntax-entry ?\] ")[" syntax-table)
     (modify-syntax-entry ?{ "(}" syntax-table)
     (modify-syntax-entry ?} "){" syntax-table)
 
@@ -298,7 +300,7 @@ See `run-hooks'."
     (`(,_ . ";") (smie-rule-separator kind))
     (`(,_ . ",") (smie-rule-separator kind))
     (`(:elem . ,_) 0)
-    (t nil)))
+    (_ nil)))
 
 (defalias 'wolfram-smie-forward-token 'smie-default-forward-token)
 (defalias 'wolfram-smie-backward-token 'smie-default-backward-token)
@@ -371,13 +373,29 @@ if that value is non-nil."
   (comint-send-region (wolfram-proc) start end)
   (comint-send-string (wolfram-proc) "\C-j"))
 
+(defun wolfram-preoutput-filter-function (input-string)
+  (if (and (not (string= input-string "\r\n"))
+           (string-match "\r$" input-string))
+      (concat (string-trim-right input-string) " ")
+    input-string))
+
+;; (defun wolfram-output-filter-function (input-string)
+;;   (if (string-match "^\"" input-string)
+;;       (string-trim-left input-string)
+;;     input-string))
+
 (define-derived-mode inferior-wolfram-mode comint-mode "Inferior Mathematica"
   "Major mode for interacting with an inferior Mathematica process"
   :abbrev-table wolfram-mode-abbrev-table
-  (setq comint-prompt-regexp "^(In|Out)\[[0-9]*\]:?= *")
+  (setq comint-prompt-regexp "^\\(In\\|Out\\)\\[[0-9]*\\]:?= *")
   (wolfram-mode-variables)
   (setq mode-line-process '(":%s"))
-  (setq comint-process-echoes t))
+  (setq comint-process-echoes t)
+  (add-hook 'comint-preoutput-filter-functions
+            #'wolfram-preoutput-filter-function nil t)
+  ;; (add-hook 'comint-output-filter-functions
+  ;;           #'wolfram-output-filter-function nil t)
+  )
 
 ;;;###autoload
 (defun run-wolfram (cmd)
