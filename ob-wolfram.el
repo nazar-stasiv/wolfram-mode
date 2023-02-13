@@ -46,7 +46,9 @@
 (defun org-babel-execute:wolfram (body params)
   "Execute a block of Mathematica code with org-babel.  This function is
 called by `org-babel-execute-src-block'"
-  (let* ((result-params (cdr (assq :result-params params)))
+  (let* ((session (org-babel-prep-session:wolfram
+                   (cdr (assq :session params))))
+         (result-params (cdr (assq :result-params params)))
          (file (cdr (assq :file params)))
 	 (full-body (org-babel-expand-body:wolfram body params))
 	 (tmp-script-file (org-babel-temp-file "wolfram-"))
@@ -66,13 +68,18 @@ called by `org-babel-execute-src-block'"
          (progn (org-babel-script-escape (org-trim raw)) (print "niet rouw"))))
      (org-babel-eval (concat cmd " " tmp-script-file) ""))))
 
-(defun org-babel-prep-session:wolfram (session params)
+(defun org-babel-prep-session:wolfram (&optional session params)
   "This function does nothing so far"
-  (error "Currently no support for sessions"))
-
-(defun org-babel-prep-session:wolfram (session body params)
-  "This function does nothing so far"
-  (error "Currently no support for sessions"))
+  (when (and session (not (string= session "none")))
+    (save-window-excursion
+      (or (org-babel-comint-buffer-livep session)
+          (progn
+	    (run-wolfram session)
+	    ;; Needed for Emacs 23 since the marker is initially
+	    ;; undefined and the filter functions try to use it without
+	    ;; checking.
+	    (set-marker comint-last-output-start (point))
+	    (get-buffer (current-buffer)))))))
 
 (defun org-babel-wolfram-var-to-wolfram (var)
   "Convert an elisp value to a Mathematica variable.

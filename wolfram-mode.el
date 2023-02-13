@@ -398,16 +398,17 @@ if that value is non-nil."
   )
 
 ;;;###autoload
-(defun run-wolfram (cmd)
+(defun run-wolfram (buffer &optional cmd)
   "Run an inferior Mathematica process CMD, input and output via buffer *wolfram*."
-  (interactive (list (if current-prefix-arg
+  (interactive (list "wolfram"
+                     (if current-prefix-arg
                          (read-string "Run Mathematica: " wolfram-program)
                        wolfram-program)))
-  (setq wolfram-program cmd)
+  (setq wolfram-program (or cmd wolfram-program))
   (let ((cmdlist (append (split-string-and-unquote wolfram-program)
                          wolfram-program-arguments)))
     (pop-to-buffer-same-window
-     (set-buffer (apply 'make-comint-in-buffer "wolfram" (get-buffer "*wolfram*")
+     (set-buffer (apply 'make-comint-in-buffer buffer (get-buffer buffer)
                         (car cmdlist) nil (cdr cmdlist)))))
   (inferior-wolfram-mode))
 
