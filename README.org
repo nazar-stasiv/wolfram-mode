@@ -1,0 +1,20 @@
+#+TITLE: ob-wolfram.el
+
+#+begin_src elisp
+(use-package wolfram-mode :ensure nil
+  :mode ("\\.m\\'" . wolfram-mode)
+  :init (lambda ()
+          (setq wolfram-program "/usr/local/bin/math"
+                wolfram-path "~/.WolframEngine/Applications")
+          (org-babel-do-load-languages 'org-babel-load-languages
+           (append org-babel-load-languages '((wolfram . t)))))
+  :config (require 'ob-wolfram))
+#+end_src
+
+
+#+begin_src wolfram :exports both
+Solve[2x + 1 == 5, x]
+#+end_src
+
+#+RESULTS:
+: {{x -> 2}}
