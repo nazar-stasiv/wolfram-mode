@@ -1,4 +1,6 @@
-#+TITLE: ob-wolfram.el
+#+TITLE: wolfram-mode
+
+* wolfram-mode.el
 
 #+begin_src elisp
 (use-package wolfram-mode :ensure nil
@@ -10,7 +12,7 @@
            (append org-babel-load-languages '((wolfram . t)))))
   :config (require 'ob-wolfram))
 #+end_src
-
+* ob-wolfram.el
 
 #+begin_src wolfram :exports both
 Solve[2x + 1 == 5, x]
