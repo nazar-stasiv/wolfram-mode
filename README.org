@@ -8,12 +8,12 @@ Clone project into =source-dir= and configure =init.el=
 (use-package wolfram-mode :ensure nil
   :load-path "source-dir"
   :mode ("\\.m\\'" . wolfram-mode)
-  :init (setq wolfram-program "/usr/local/bin/math"
-              wolfram-path "~/.WolframEngine/Applications")
-  :config (lambda ()
-            (require 'ob-wolfram)
-            (org-babel-do-load-languages 'org-babel-load-languages
-             (append org-babel-load-languages '((wolfram . t))))))
+  :init (lambda ()
+          (org-babel-do-load-languages 'org-babel-load-languages
+           (append org-babel-load-languages '((wolfram . t))))
+          (setq wolfram-program "/usr/local/bin/math"
+                wolfram-path "~/.WolframEngine/Applications"))
+  :config (require 'ob-wolfram))
 #+end_src
 
 * ob-wolfram.el
